@@ -76,7 +76,7 @@ class OptimizedHealthcareDataProcessor:
         """
         top_procedures = self.data.nlargest(n, 'procedure_cost')[
             ['procedure_name', 'procedure_cost', 'patient_id']
-        ].rename(columns={'procedure_name': 'procedure'})
+        ].rename(columns={'procedure_name': 'procedure', 'procedure_cost': 'cost'})
         return top_procedures.to_dict('records')
     
     def filter_by_municipality(self, municipality_code: str) -> pd.DataFrame:
@@ -98,10 +98,14 @@ class OptimizedHealthcareDataProcessor:
             # Return first occurrence if multiple records for same patient
             result = self._patient_index.loc[patient_id]
             if isinstance(result, pd.Series):
-                return result.to_dict()
+                result_dict = result.to_dict()
+                result_dict['patient_id'] = patient_id
+                return result_dict
             else:
                 # Multiple records, return first
-                return result.iloc[0].to_dict()
+                result_dict = result.iloc[0].to_dict()
+                result_dict['patient_id'] = patient_id
+                return result_dict
         except KeyError:
             return None
     
@@ -131,7 +135,7 @@ class OptimizedHealthcareDataProcessor:
         Optimization: Uses optimized pandas to_json() instead of row-by-row conversion
         Performance: ~10-50x faster depending on dataset size
         """
-        self.data.to_json(output_file, orient='records', indent=2)
+        self.data.to_json(output_file, orient='records', indent=2, date_format='iso')
     
     def find_duplicate_procedures(self) -> List[Dict]:
         """

@@ -84,7 +84,9 @@ def run_benchmark(data_file='sample_data.csv', num_records=1000):
     
     # Test 6: Search patient by ID
     print("\n7. Search patient by ID...")
-    patient_id = original.data['patient_id'].iloc[500]
+    # Use min to avoid index out of bounds
+    idx = min(500, len(original.data) - 1)
+    patient_id = original.data['patient_id'].iloc[idx]
     orig_time, orig_result = measure_time(original.search_patient_by_id, patient_id)
     opt_time, opt_result = measure_time(optimized.search_patient_by_id, patient_id)
     print(f"   Original: {orig_time:.4f}s")

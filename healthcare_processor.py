@@ -83,10 +83,10 @@ class HealthcareDataProcessor:
     def filter_by_municipality(self, municipality_code: str) -> pd.DataFrame:
         """Filter data by municipality"""
         # Inefficiency: Creating new DataFrame with append in loop
-        filtered_data = pd.DataFrame()
+        filtered_data = pd.DataFrame(columns=self.data.columns)
         for index, row in self.data.iterrows():
             if row['municipality_code'] == municipality_code:
-                filtered_data = filtered_data.append(row, ignore_index=True)
+                filtered_data = pd.concat([filtered_data, pd.DataFrame([row])], ignore_index=True)
         
         return filtered_data
     
