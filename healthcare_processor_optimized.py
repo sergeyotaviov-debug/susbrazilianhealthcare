@@ -65,6 +65,12 @@ class OptimizedHealthcareDataProcessor:
         Calculate average hospital stay duration using vectorized operations
         Optimization: Direct pandas calculation instead of list comprehension
         """
+        # Ensure dates are in datetime format
+        if not pd.api.types.is_datetime64_any_dtype(self.data['admission_date']):
+            self.data['admission_date'] = pd.to_datetime(self.data['admission_date'])
+        if not pd.api.types.is_datetime64_any_dtype(self.data['discharge_date']):
+            self.data['discharge_date'] = pd.to_datetime(self.data['discharge_date'])
+        
         durations = (self.data['discharge_date'] - self.data['admission_date']).dt.days
         return durations.mean()
     
@@ -151,22 +157,28 @@ class OptimizedHealthcareDataProcessor:
         # Filter only groups with more than one record
         duplicates_df = duplicates_df[duplicates_df['count'] > 1]
         
-        # Get the actual duplicate records
+        # Convert to list of dicts using vectorized operations
+        # Add indices by merging with original data
+        if len(duplicates_df) == 0:
+            return []
+        
+        # Create a list to store results efficiently
         results = []
-        for _, row in duplicates_df.iterrows():
+        for group_data in duplicates_df.to_dict('records'):
+            # Use vectorized mask to find matching records
             mask = (
-                (self.data['patient_id'] == row['patient_id']) &
-                (self.data['procedure_name'] == row['procedure_name']) &
-                (self.data['admission_date'] == row['admission_date'])
+                (self.data['patient_id'] == group_data['patient_id']) &
+                (self.data['procedure_name'] == group_data['procedure_name']) &
+                (self.data['admission_date'] == group_data['admission_date'])
             )
             duplicate_indices = self.data[mask].index.tolist()
             
             if len(duplicate_indices) > 1:
                 results.append({
-                    'patient_id': row['patient_id'],
-                    'procedure': row['procedure_name'],
-                    'date': row['admission_date'],
-                    'count': row['count'],
+                    'patient_id': group_data['patient_id'],
+                    'procedure': group_data['procedure_name'],
+                    'date': group_data['admission_date'],
+                    'count': group_data['count'],
                     'indices': duplicate_indices
                 })
         

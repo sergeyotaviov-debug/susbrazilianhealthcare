@@ -55,7 +55,7 @@ class TestCostCalculations:
         # Results should be equivalent
         assert len(orig_result) == len(opt_result)
         for patient_id in orig_result:
-            assert abs(orig_result[patient_id] - opt_result[patient_id]) < 0.01
+            assert orig_result[patient_id] == pytest.approx(opt_result[patient_id], rel=1e-5)
     
     def test_get_top_expensive_procedures(self, original_processor, optimized_processor):
         orig_result = original_processor.get_top_expensive_procedures(5)
@@ -64,7 +64,7 @@ class TestCostCalculations:
         assert len(orig_result) == len(opt_result)
         # Top procedures should be the same (order matters)
         for i in range(len(orig_result)):
-            assert abs(orig_result[i]['cost'] - opt_result[i]['cost']) < 0.01
+            assert orig_result[i]['cost'] == pytest.approx(opt_result[i]['cost'], rel=1e-5)
 
 
 class TestFiltering:
@@ -119,7 +119,7 @@ class TestReports:
         
         # Values should match
         assert orig_report['admissions'] == opt_report['admissions']
-        assert abs(orig_report['total_cost'] - opt_report['total_cost']) < 0.01
+        assert orig_report['total_cost'] == pytest.approx(opt_report['total_cost'], rel=1e-5)
         assert orig_report['unique_patients'] == opt_report['unique_patients']
     
     def test_calculate_average_stay_duration(self, optimized_processor):
